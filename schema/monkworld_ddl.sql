@@ -14,6 +14,8 @@ CREATE TABLE author (
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE EXTENSION IF NOT EXISTS ltree;
+
 -- Table for storing user posts
 CREATE TABLE node (
     id           BIGSERIAL PRIMARY KEY,
@@ -22,6 +24,7 @@ CREATE TABLE node (
     title        VARCHAR(255) NOT NULL,
     content      TEXT         NOT NULL,
     reputation   INTEGER      NOT NULL DEFAULT 0,
+    path         ltree        NOT NULL DEFAULT '0'::ltree,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -30,6 +33,7 @@ CREATE TABLE node (
 CREATE INDEX idx_node_created ON node(created_at);
 CREATE INDEX idx_node_author ON node(author_id);
 CREATE INDEX idx_node_type ON node(node_type_id);
+CREATE INDEX idx_node_path ON node USING GIST (path);
 
 -- Add node types
 INSERT INTO node_type (id, name, description)
@@ -59,4 +63,19 @@ FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 CREATE TRIGGER update_author_modtime
 BEFORE UPDATE ON author
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
+-- Function to set the path to the node's ID
+CREATE OR REPLACE FUNCTION set_node_path()
+    RETURNS TRIGGER AS $$
+BEGIN
+    NEW.path = NEW.id::TEXT::ltree;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to set the path on insert
+CREATE TRIGGER trg_set_node_path
+    BEFORE INSERT ON node
+    FOR EACH ROW
+EXECUTE FUNCTION set_node_path();
 
