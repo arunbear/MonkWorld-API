@@ -35,7 +35,10 @@ CREATE INDEX idx_node_created ON node(created_at);
 CREATE INDEX idx_node_author ON node(author_id);
 CREATE INDEX idx_node_type ON node(node_type_id);
 
--- Insert the perlquestion type
+-- Add node types
+INSERT INTO node_type (id, name, description)
+VALUES (11, 'note', 'A comment on a node');
+
 INSERT INTO node_type (id, name, description)
 VALUES (115, 'perlquestion', 'A question about Perl programming language');
 
