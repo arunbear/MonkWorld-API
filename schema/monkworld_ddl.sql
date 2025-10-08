@@ -1,33 +1,29 @@
 -- SQL Schema for storing Perl questions and discussions
 
--- Table for storing node type
 CREATE TABLE node_type (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT        NOT NULL
 );
 
--- Table for storing user/author
 CREATE TABLE author (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    is_anonymous BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id           SERIAL PRIMARY KEY,
+    username     VARCHAR(100) NOT NULL UNIQUE,
+    is_anonymous BOOLEAN   DEFAULT FALSE,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table for storing node (question, answer, etc.)
+-- Table for storing user posts
 CREATE TABLE node (
-    id BIGINT PRIMARY KEY,
-    title VARCHAR(255),
-    node_type_id INTEGER REFERENCES node_type(id),
-    author_id INTEGER REFERENCES author(id),
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    content TEXT,
-    reputation INTEGER DEFAULT 0,
-    CONSTRAINT fk_node_type FOREIGN KEY(node_type_id) REFERENCES node_type(id),
-    CONSTRAINT fk_author FOREIGN KEY(author_id) REFERENCES author(id)
+    id           BIGSERIAL PRIMARY KEY,
+    node_type_id INTEGER REFERENCES node_type (id),
+    author_id    INTEGER REFERENCES author (id),
+    title        VARCHAR(255) NOT NULL,
+    content      TEXT         NOT NULL,
+    reputation   INTEGER      NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for better query performance
@@ -40,7 +36,7 @@ INSERT INTO node_type (id, name, description)
 VALUES (11, 'note', 'A comment on a node');
 
 INSERT INTO node_type (id, name, description)
-VALUES (115, 'perlquestion', 'A question about Perl programming language');
+VALUES (115, 'perlquestion', 'A question about Perl programming');
 
 -- Insert the anonymous user
 INSERT INTO author (id, username, created_at, updated_at)
