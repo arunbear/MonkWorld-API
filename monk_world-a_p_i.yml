@@ -1,3 +1,10 @@
 ---
 secrets:
   - 46f14c2b0b6d6b849624cf0afe4076dd2c340f15
+
+database:
+  username: monk
+  password: monkpass
+  host: localhost
+  port: 5432
+  database: monkworld

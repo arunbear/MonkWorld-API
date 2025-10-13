@@ -19,8 +19,10 @@ CREATE EXTENSION IF NOT EXISTS ltree;
 -- Table for storing user posts
 CREATE TABLE node (
     id           BIGSERIAL PRIMARY KEY,
-    node_type_id INTEGER REFERENCES node_type (id),
-    author_id    INTEGER REFERENCES monk (id),
+    node_type_id INTEGER NOT NULL REFERENCES node_type (id),
+    author_id    INTEGER NOT NULL REFERENCES monk (id),
+    root_node    BIGINT NOT NULL REFERENCES node(id),
+    parent_node  BIGINT NOT NULL REFERENCES node(id),
     title        VARCHAR(255) NOT NULL,
     content      TEXT         NOT NULL,
     reputation   INTEGER      NOT NULL DEFAULT 0,
