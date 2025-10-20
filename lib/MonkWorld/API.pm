@@ -13,8 +13,8 @@ sub startup ($self) {
   # Router
   my $r = $self->routes;
 
-  # Normal route to controller
   $r->get('/')->to('Example#welcome');
+  $r->get('/health' => sub ($c) { $c->render(json => ['OK']) });
 }
 
 1;
