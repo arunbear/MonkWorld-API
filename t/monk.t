@@ -20,7 +20,8 @@ my $path = $t->app->home->child('migrations');
 $pg->migrations->from_dir($path)->migrate;
 
 END {
-    $pg->db->query("DROP SCHEMA $TEST_SCHEMA CASCADE");
+    $pg->db->query("DROP SCHEMA $TEST_SCHEMA CASCADE")
+      if $pg;
 }
 
 # Skip the authenticated test if no token is provided
