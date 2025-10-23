@@ -25,7 +25,11 @@ jobs:
         run: |
           curl -L https://cpanmin.us | perl - App::cpanminus
 
-      - name: Install dependencies
+      - name: Install system dependencies
+        run: |
+          apt-get update && apt-get install -y libpq-dev
+
+      - name: Install Perl dependencies
         run: |
           cpanm --local-lib=~/perl5 --installdeps --notest .
 
