@@ -11,7 +11,7 @@ jobs:
     name: Run Perl Tests
     runs-on: ubuntu-latest
     container:
-      image: perl:5.42-slim
+      image: perl:5.42
 
     steps:
       - name: Checkout code
