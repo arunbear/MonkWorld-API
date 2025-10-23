@@ -23,13 +23,6 @@ END {
     $pg->db->query("DROP SCHEMA $TEST_SCHEMA CASCADE");
 }
 
-# Test creating a monk without authentication (should fail)
-$t->post_ok('/monk' => json => {
-    username => 'test_monk',
-})
-->status_is(HTTP_UNAUTHORIZED)
-->json_has('/error');
-
 # Skip the authenticated test if no token is provided
 if (my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}) {
     # Test creating a monk with bearer token

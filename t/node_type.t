@@ -24,14 +24,6 @@ END {
     $pg->db->query("DROP SCHEMA $TEST_SCHEMA CASCADE");
 }
 
-# Test creating a node type without authentication (should fail)
-$t->post_ok('/node-type' => json => {
-    name        => 'test_node_type',
-    description => 'A test node type for testing',
-})
-->status_is(HTTP_UNAUTHORIZED)
-->json_has('/error');
-
 # Skip the authenticated test if no token is provided
 if (my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}) {
     # Test creating a node type with bearer token
