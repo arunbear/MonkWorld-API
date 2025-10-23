@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Perl dependencies
         run: |
-          cpanm --local-lib=~/perl5 --installdeps --notest .
+          cpanm -v --installdeps --notest .
 
       - name: Run tests
         env:
