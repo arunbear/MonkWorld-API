@@ -52,5 +52,7 @@ jobs:
           cpanm --installdeps --notest .
 
       - name: Run tests
+        env:
+          MONKWORLD_AUTH_TOKEN: ${{ secrets.MONKWORLD_AUTH_TOKEN }}
         run: |
           prove -lr
