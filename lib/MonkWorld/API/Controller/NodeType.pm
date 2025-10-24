@@ -14,8 +14,7 @@ sub create ($self) {
 
     # Prepare node type data
     my $node_data = {
-        name        => $data->{name},
-        description => $data->{description} // $data->{name},
+        name => $data->{name},
     };
 
     # Include ID if provided
@@ -23,7 +22,7 @@ sub create ($self) {
 
     # Insert node type
     my $result = $self->pg->db->insert('node_type', $node_data,
-        { returning => ['id', 'name', 'description'] });
+        { returning => ['id', 'name'] });
 
     my $node_type = $result->hash;
     $self->res->headers->location("/node-type/$node_type->{id}");

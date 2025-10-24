@@ -36,14 +36,12 @@ sub a_node_type_can_be_created : Test(2) ($self) {
             '/node-type' => {
                 'Authorization' => "Bearer $auth_token"
             } => json => {
-                name        => 'a_node_type',
-                description => 'Created with bearer token',
+                name => 'a_node_type'
             }
         )
         ->status_is(HTTP_CREATED)
         ->header_like('Location' => qr{/node-type/\d+$})
         ->json_is('/name' => 'a_node_type')
-        ->json_is('/description' => 'Created with bearer token')
         ->json_has('/id');
     };
 
@@ -55,16 +53,14 @@ sub a_node_type_can_be_created : Test(2) ($self) {
             '/node-type' => {
                 'Authorization' => "Bearer $auth_token"
             } => json => {
-                id          => $explicit_id,
-                name        => 'with_explicit_id',
-                description => 'Created with explicit ID',
+                id   => $explicit_id,
+                name => 'another_node_type'
             }
         )
         ->status_is(HTTP_CREATED)
         ->header_like('Location' => qr{/node-type/\d+$})
         ->json_is('/id' => $explicit_id)
-        ->json_is('/name' => 'with_explicit_id')
-        ->json_is('/description' => 'Created with explicit ID');
+        ->json_is('/name' => 'another_node_type');
     };
 }
 

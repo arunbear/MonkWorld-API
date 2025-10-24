@@ -103,7 +103,6 @@ sub ensure_node_type_exists ($db, $node_data) {
     my $results = $db->insert('node_type', {
         id          => $node_data->{type_id},
         name        => $node_data->{type_name},
-        description => $node_data->{type_name},
     }, { on_conflict => undef });
 
     printf("Rows inserted into node_type: %d\n", $results->rows);

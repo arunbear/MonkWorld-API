@@ -1,7 +1,6 @@
 CREATE TABLE node_type (
     id          SERIAL PRIMARY KEY,
-    name        VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT        NOT NULL
+    name        VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE monk (
@@ -43,13 +42,6 @@ CREATE INDEX idx_node_type ON node(node_type_id);
 CREATE INDEX idx_note_root ON note(root_node);
 CREATE INDEX idx_note_parent ON note(parent_node);
 CREATE INDEX idx_note_path ON note USING GIST (path);
-
--- Add node types
-INSERT INTO node_type (id, name, description)
-VALUES (11, 'note', 'A comment on a node');
-
-INSERT INTO node_type (id, name, description)
-VALUES (115, 'perlquestion', 'A question about Perl programming');
 
 -- Insert the anonymous user
 INSERT INTO monk (id, username, created_at, updated_at)
