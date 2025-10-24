@@ -12,6 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: perl:5.42
+      env:
+        MONKWORLD_PG_URL: postgresql://test:test@postgres:5432/test
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        # Add health checks
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -31,10 +49,8 @@ jobs:
 
       - name: Install Perl dependencies
         run: |
-          cpanm -v --installdeps --notest .
+          cpanm --installdeps --notest .
 
       - name: Run tests
-        env:
-          PERL5LIB: ${{ github.workspace }}/lib:~/perl5/lib/perl5
         run: |
-          prove -lvr
+          prove -lr
