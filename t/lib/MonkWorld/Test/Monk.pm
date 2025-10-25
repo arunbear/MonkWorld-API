@@ -23,6 +23,11 @@ sub db_setup : Test(startup) ($self) {
     $self->{tx} = $pg->db->begin;
 }
 
+sub db_teardown : Test(setup) ($self) {
+    my $db = $self->mojo->app->pg->db;
+    $db->delete('monk');
+}
+
 sub a_monk_can_be_created : Test(2) ($self) {
     my $t = $self->mojo;
 
@@ -94,4 +99,34 @@ sub a_monk_cannot_be_created_with_an_invalid_id : Tests(4) ($self) {
     ->status_is(HTTP_UNPROCESSABLE_CONTENT)
     ->json_has('/error')
     ->json_like('/error' => qr/must be a positive integer/);
+}
+
+sub a_monk_cannot_be_created_if_username_exists : Tests(6) ($self) {
+    my $t = $self->mojo;
+
+    my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}
+        or return('Expected MONKWORLD_AUTH_TOKEN in %ENV');
+
+    my $a_username = 'a_user';
+
+    # First, create a monk
+    $t->post_ok(
+        '/monk' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            username => $a_username
+        }
+    )->status_is(HTTP_CREATED);
+
+    # Then try to create another monk with the same username
+    $t->post_ok(
+        '/monk' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            username => $a_username
+        }
+    )
+    ->status_is(HTTP::Status::HTTP_CONFLICT)
+    ->json_has('/error')
+    ->json_like('/error' => qr/Username already exists/);
 }

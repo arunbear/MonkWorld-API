@@ -1,7 +1,7 @@
 package MonkWorld::API::Controller::Monk;
 use v5.40;
 use Mojo::Base 'Mojolicious::Controller', -signatures;
-use HTTP::Status qw(HTTP_UNPROCESSABLE_CONTENT HTTP_CREATED);
+use HTTP::Status qw(HTTP_UNPROCESSABLE_CONTENT HTTP_CREATED HTTP_CONFLICT);
 
 sub create ($self) {
     my $data = $self->req->json;
@@ -34,9 +34,20 @@ sub create ($self) {
     }
 
     my $result = $self->pg->db->insert('monk', $monk_data,
-        { returning => ['id', 'username', 'created_at'] });
+        {
+            returning => ['id', 'username', 'created_at'],
+            on_conflict => undef,
+        });
+
+    if ($result->rows == 0) {
+        return $self->render(
+            json   => { error => 'Username already exists' },
+            status => HTTP_CONFLICT
+        );
+    }
 
     my $monk = $result->hash;
+
     $self->res->headers->location("/monk/$monk->{id}");
     $self->render(
         json   => $monk,
