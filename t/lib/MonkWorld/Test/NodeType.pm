@@ -7,22 +7,20 @@ use Mojo::URL;
 use Test::Mojo;
 
 use Test::Class::Most
-  attributes  => [qw/mojo schema/];
+  attributes  => [qw/mojo/];
 
 INIT { Test::Class->runtests }
 
 sub db_setup : Test(startup) ($self) {
     my $t = Test::Mojo->new('MonkWorld::API');
     $self->mojo($t);
-    $self->schema('test_node_type'); # for test isolation
-
-    my $pg = $t->app->pg;
-    $pg->search_path([$self->schema, 'public']);
-    $pg->db->query("DROP SCHEMA IF EXISTS ${\ $self->schema} CASCADE");
-    $pg->db->query("CREATE SCHEMA ${\ $self->schema}");
 
     my $path = $t->app->home->child('migrations');
+    my $pg = $t->app->pg;
     $pg->migrations->from_dir($path)->migrate;
+
+    # keep transaction open for test isolation
+    $self->{tx} = $pg->db->begin;
 }
 
 sub a_node_type_can_be_created : Test(2) ($self) {
@@ -62,9 +60,4 @@ sub a_node_type_can_be_created : Test(2) ($self) {
         ->json_is('/id' => $explicit_id)
         ->json_is('/name' => 'another_node_type');
     };
-}
-
-sub db_cleanup : Test(shutdown) ($self) {
-    my $pg = $self->mojo->app->pg;
-    $pg->db->query("DROP SCHEMA IF EXISTS ${\ $self->schema} CASCADE");
 }
