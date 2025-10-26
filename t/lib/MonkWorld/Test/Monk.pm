@@ -7,11 +7,11 @@ use Mojo::URL;
 use Test::Mojo;
 
 use Test::Class::Most
-    attributes  => [qw/mojo/];
+  attributes  => [qw/mojo dbh/];
 
 INIT { Test::Class->runtests }
 
-sub db_setup : Test(startup) ($self) {
+sub db_prepare : Test(startup) ($self) {
     my $t = Test::Mojo->new('MonkWorld::API');
     $self->mojo($t);
 
@@ -19,13 +19,15 @@ sub db_setup : Test(startup) ($self) {
     my $pg = $t->app->pg;
     $pg->migrations->from_dir($path)->migrate;
 
-    # keep transaction open for test isolation
-    $self->{tx} = $pg->db->begin;
+    $self->dbh($pg->db->dbh);
 }
 
-sub db_teardown : Test(setup) ($self) {
-    my $db = $self->mojo->app->pg->db;
-    $db->delete('monk');
+sub db_setup : Test(setup) ($self) {
+    $self->dbh->begin_work;
+}
+
+sub db_teardown : Test(teardown) ($self) {
+    $self->dbh->rollback;
 }
 
 sub a_monk_can_be_created : Test(2) ($self) {
