@@ -1,7 +1,7 @@
 package MonkWorld::API::Controller::NodeType;
 use v5.40;
 use Mojo::Base 'Mojolicious::Controller', -signatures;
-use HTTP::Status qw(HTTP_BAD_REQUEST HTTP_CREATED);
+use HTTP::Status qw(HTTP_BAD_REQUEST HTTP_CREATED HTTP_CONFLICT);
 
 sub create ($self) {
     my $data = $self->req->json;
@@ -20,9 +20,18 @@ sub create ($self) {
     # Include ID if provided
     $node_data->{id} = $data->{id} if exists $data->{id};
 
-    # Insert node type
     my $result = $self->pg->db->insert('node_type', $node_data,
-        { returning => ['id', 'name'] });
+        {
+            returning => ['id', 'name'],
+            on_conflict => undef,
+        });
+
+    if ($result->rows == 0) {
+        return $self->render(
+            json   => { error => 'Node type with this name already exists' },
+            status => HTTP_CONFLICT
+        );
+    }
 
     my $node_type = $result->hash;
     $self->res->headers->location("/node-type/$node_type->{id}");
