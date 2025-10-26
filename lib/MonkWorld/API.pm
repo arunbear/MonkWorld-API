@@ -39,6 +39,7 @@ sub startup ($self) {
 
   $auth->post('/node-type')->to('NodeType#create');
   $auth->post('/monk')->to('Monk#create');
+  $auth->post('/node')->to('Node#create');
 }
 
 1;

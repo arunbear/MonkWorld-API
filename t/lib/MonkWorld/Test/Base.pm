@@ -4,7 +4,7 @@ use v5.40;
 use Mojo::Pg;
 use Test::Mojo;
 use Test::Class::Most
-  attributes  => [qw/mojo dbh/];
+  attributes  => [qw/mojo pg dbh/];
 
 INIT { Test::Class->runtests }
 
@@ -16,6 +16,7 @@ sub db_prepare : Test(startup) ($self) {
     my $pg = $t->app->pg;
     $pg->migrations->from_dir($path)->migrate;
 
+    $self->pg($pg);
     $self->dbh($pg->db->dbh);
 }
 
@@ -28,4 +29,8 @@ sub db_setup : Test(setup) ($self) {
 # This ensures tests don't affect each other.
 sub db_teardown : Test(teardown) ($self) {
     $self->dbh->rollback;
+}
+
+sub anonymous_user_id ($self) {
+    return $self->pg->db->select('monk', ['id'], { username => 'Anonymous Monk' })->hash->{id};
 }
