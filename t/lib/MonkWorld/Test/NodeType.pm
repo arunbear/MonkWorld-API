@@ -7,28 +7,8 @@ use Mojo::URL;
 use Test::Mojo;
 
 use Test::Class::Most
-  attributes  => [qw/mojo dbh/];
+  parent => 'MonkWorld::Test::Base';
 
-INIT { Test::Class->runtests }
-
-sub db_prepare : Test(startup) ($self) {
-    my $t = Test::Mojo->new('MonkWorld::API');
-    $self->mojo($t);
-
-    my $path = $t->app->home->child('migrations');
-    my $pg = $t->app->pg;
-    $pg->migrations->from_dir($path)->migrate;
-
-    $self->dbh($pg->db->dbh);
-}
-
-sub db_setup : Test(setup) ($self) {
-    $self->dbh->begin_work;
-}
-
-sub db_teardown : Test(teardown) ($self) {
-    $self->dbh->rollback;
-}
 
 sub a_node_type_can_be_created : Test(2) ($self) {
     my $t = $self->mojo;
