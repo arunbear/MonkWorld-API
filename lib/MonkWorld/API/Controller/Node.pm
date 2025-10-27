@@ -4,6 +4,11 @@ use v5.40;
 use Mojo::Base 'Mojolicious::Controller', -signatures;
 use HTTP::Status qw(HTTP_CREATED HTTP_BAD_REQUEST HTTP_CONFLICT);
 use Mojo::JSON qw(decode_json);
+use MonkWorld::API::Model::Node;
+
+has node_model => sub ($self) {
+    MonkWorld::API::Model::Node->new(pg => $self->pg);
+};
 
 sub create ($self) {
     my $data = $self->req->json;
@@ -25,12 +30,7 @@ sub create ($self) {
     # Include ID if provided
     $node_data->{id} = $data->{id} if exists $data->{id};
 
-    # Insert node with conflict handling
-    my $result = $self->pg->db->insert('node', $node_data,
-        {
-            returning => ['id', 'node_type_id', 'author_id', 'title', 'doctext', 'created_at'],
-            on_conflict => undef,
-        });
+    my $result = $self->node_model->create($node_data);
 
     if ($result->rows == 0) {
         return $self->render(
@@ -46,5 +46,3 @@ sub create ($self) {
         status => HTTP_CREATED
     );
 }
-
-1;
