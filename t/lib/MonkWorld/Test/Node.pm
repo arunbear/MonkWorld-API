@@ -1,7 +1,7 @@
 package MonkWorld::Test::Node;
 
 use v5.40;
-use HTTP::Status qw(HTTP_CREATED);
+use HTTP::Status qw(HTTP_CREATED HTTP_CONFLICT);
 
 use Test::Class::Most
   parent => 'MonkWorld::Test::Base';
@@ -68,4 +68,52 @@ sub a_node_can_be_created : Test(4) ($self) {
         ->json_is('/doctext' => 'This node has an explicit ID')
         ->json_is('/node_type_id' => $node_type_id);
     };
+}
+
+sub a_node_cannot_be_created_if_id_already_exists : Test(7) ($self) {
+    my $t = $self->mojo;
+
+    my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}
+        or return('Expected MONKWORLD_AUTH_TOKEN in %ENV');
+
+    # First, create a node type
+    $t->post_ok(
+        '/node-type' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            name => 'article'
+        }
+    )->status_is(HTTP_CREATED);
+
+    my $node_type_id = $t->tx->res->json->{id};
+    my $anon_user_id = $self->anonymous_user_id;
+    my $node_id = 1001;  # Explicit ID for testing
+
+    # Create first node with explicit ID
+    $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            id => $node_id,
+            node_type_id => $node_type_id,
+            author_id    => $anon_user_id,
+            title       => 'First Node',
+            doctext     => 'This is the first node'
+        }
+    )->status_is(HTTP_CREATED);
+
+    # Try to create another node with the same ID
+    $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            id => $node_id,
+            node_type_id => $node_type_id,
+            author_id    => $anon_user_id,
+            title       => 'Duplicate Node',
+            doctext     => 'This should fail'
+        }
+    )
+    ->status_is(HTTP::Status::HTTP_CONFLICT)
+    ->json_like('/error' => qr/already exists/);
 }
