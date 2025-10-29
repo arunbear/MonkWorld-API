@@ -48,13 +48,13 @@ sub a_node_can_be_created : Test(4) ($self) {
     subtest 'with an explicit ID' => sub {
         my $id = $t->tx->res->json->{id};
         ok $id > 0, 'ID is a positive integer';
-        my $explicit_id = $id + 1;
+        my $explicit_id = $id + 2; # better than 1 as auto increment would give a false pass
 
         $t->post_ok(
             '/node' => {
                 'Authorization' => "Bearer $auth_token"
             } => json => {
-                id           => $explicit_id,
+                node_id      => $explicit_id,
                 node_type_id => $node_type_id,
                 author_id    => $anon_user_id,
                 title        => 'Node With ID',
@@ -94,7 +94,7 @@ sub a_node_cannot_be_created_if_id_already_exists : Test(7) ($self) {
         '/node' => {
             'Authorization' => "Bearer $auth_token"
         } => json => {
-            id => $node_id,
+            node_id      => $node_id,
             node_type_id => $node_type_id,
             author_id    => $anon_user_id,
             title       => 'First Node',
@@ -107,7 +107,7 @@ sub a_node_cannot_be_created_if_id_already_exists : Test(7) ($self) {
         '/node' => {
             'Authorization' => "Bearer $auth_token"
         } => json => {
-            id => $node_id,
+            node_id      => $node_id,
             node_type_id => $node_type_id,
             author_id    => $anon_user_id,
             title       => 'Duplicate Node',

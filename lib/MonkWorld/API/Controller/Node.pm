@@ -19,27 +19,16 @@ sub create ($self) {
         status => HTTP_BAD_REQUEST
     ) unless $data->{node_type_id} && $data->{title} && $data->{doctext};
 
-    # Prepare node data
-    my $node_data = {
-        node_type_id => $data->{node_type_id},
-        author_id    => $data->{author_id},  # Include author_id from request
-        title        => $data->{title},
-        doctext      => $data->{doctext},
-    };
+    my $collection = $self->node_model->create($data);
 
-    # Include ID if provided
-    $node_data->{id} = $data->{id} if exists $data->{id};
-
-    my $result = $self->node_model->create($node_data);
-
-    if ($result->rows == 0) {
+    if ($collection->size == 0) {
         return $self->render(
             json   => { error => 'Node with this ID already exists' },
             status => HTTP_CONFLICT
         );
     }
 
-    my $node = $result->hash;
+    my $node = $collection->first;
     $self->res->headers->location("/node/$node->{id}");
     $self->render(
         json   => $node,
