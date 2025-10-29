@@ -2,6 +2,7 @@ package MonkWorld::Test::Base;
 
 use v5.40;
 use Mojo::Pg;
+use Sub::Override;
 use Test::Mojo;
 use Test::Class::Most
   attributes  => [qw/mojo pg dbh/];
@@ -33,4 +34,13 @@ sub db_teardown : Test(teardown) ($self) {
 
 sub anonymous_user_id ($self) {
     return $self->pg->db->select('monk', ['id'], { username => 'Anonymous Monk' })->hash->{id};
+}
+
+sub make_transactions_noop ($self) {
+    my $tx = bless {}, 'Mojo::Pg::Transaction';
+    my $override = Sub::Override->new(
+        'Mojo::Pg::Database::begin' => sub { $tx },
+        'Mojo::Pg::Transaction::commit' => sub { 1 },
+    );
+    return $override;
 }

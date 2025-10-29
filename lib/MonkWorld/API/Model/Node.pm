@@ -9,6 +9,17 @@ has 'pg';
 
 sub create ($self, $node_data) {
     my $db = $self->pg->db;
+    try {
+        my $tx = $db->begin;
+        my $collection = $self->_create($db, $node_data);
+        $tx->commit;
+        return $collection;
+    } catch ($error) {
+        die "Failed to create node: $error";
+    }
+}
+
+sub _create ($self, $db, $node_data) {
     my $result = $db->insert('node', {
         $node_data->{node_id} ? (id => $node_data->{node_id}) : (),
         $node_data->{created} ? (created_at => $node_data->{created}) : (),

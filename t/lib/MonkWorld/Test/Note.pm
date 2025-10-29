@@ -3,11 +3,13 @@ package MonkWorld::Test::Note;
 use v5.40;
 use HTTP::Status qw(HTTP_CREATED HTTP_CONFLICT);
 use MonkWorld::API::Constants qw(NODE_TYPE_NOTE NODE_TYPE_PERLQUESTION);
+use Mojo::Pg::Transaction;
 
 use Test::Class::Most
   parent => 'MonkWorld::Test::Base';
 
 sub a_note_can_be_created : Test(4) ($self) {
+    my $override = $self->make_transactions_noop;
     my $t = $self->mojo;
 
     my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}
