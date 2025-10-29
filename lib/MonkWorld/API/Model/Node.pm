@@ -15,7 +15,11 @@ sub create ($self, $node_data) {
         $tx->commit;
         return $collection;
     } catch ($error) {
-        die "Failed to create node: $error";
+        my $reason = $error;
+        if ($error =~ /(Key .+ is not present in table "node")/s) {
+            $reason = $1;
+        }
+        die "Failed to create node $node_data->{node_id}: $reason";
     }
 }
 
@@ -63,8 +67,7 @@ sub _create_note ($self, $db, $node_data) {
         # Get parent's path and append current node ID
         my $parent = $db->select('note', ['path'], { node_id => $parent_node })->hash;
         if (!defined $parent) {
-            warn "Parent node $parent_node not found for node $node_data->{node_id}";
-            return;
+            die "Non root parent $parent_node not present for node $node_data->{node_id}";
         }
         unshift @path_info, $parent->{path};
     }

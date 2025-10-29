@@ -28,8 +28,8 @@ CREATE TABLE node (
 -- Table for storing reply hierarchy information
 CREATE TABLE note (
     node_id      BIGINT PRIMARY KEY REFERENCES node(id),
-    root_node    BIGINT NOT NULL REFERENCES node(id),
     parent_node  BIGINT NOT NULL REFERENCES node(id),
+    root_node    BIGINT NOT NULL REFERENCES node(id),
     path         ltree  NOT NULL
 );
 

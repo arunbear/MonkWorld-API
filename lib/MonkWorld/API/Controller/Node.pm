@@ -2,7 +2,7 @@ package MonkWorld::API::Controller::Node;
 
 use v5.40;
 use Mojo::Base 'Mojolicious::Controller', -signatures;
-use HTTP::Status qw(HTTP_CREATED HTTP_BAD_REQUEST HTTP_CONFLICT);
+use HTTP::Status qw(HTTP_CREATED HTTP_BAD_REQUEST HTTP_CONFLICT HTTP_UNPROCESSABLE_ENTITY);
 use Mojo::JSON qw(decode_json);
 use MonkWorld::API::Model::Node;
 
@@ -19,7 +19,16 @@ sub create ($self) {
         status => HTTP_BAD_REQUEST
     ) unless $data->{node_type_id} && $data->{title} && $data->{doctext};
 
-    my $collection = $self->node_model->create($data);
+    my $collection;
+    try {
+        $collection = $self->node_model->create($data);
+    }
+    catch ($error) {
+        return $self->render(
+            json   => { error => $error },
+            status => HTTP_UNPROCESSABLE_ENTITY
+        );
+    }
 
     if ($collection->size == 0) {
         return $self->render(

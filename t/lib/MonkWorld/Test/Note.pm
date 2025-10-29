@@ -89,3 +89,62 @@ sub a_note_can_be_created : Test(4) ($self) {
         ->json_is('/path' => "$parent_node_id.$explicit_id");
     };
 }
+
+sub a_note_cannot_be_created_if_parent_node_does_not_exist : Test(3) ($self) {
+    my $override = $self->make_transactions_noop;
+    my $t = $self->mojo;
+
+    my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}
+        or return('Expected MONKWORLD_AUTH_TOKEN in %ENV');
+
+    $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            node_type_id => NODE_TYPE_NOTE,
+            author_id    => $self->anonymous_user_id,
+            title        => 'Test Note with no root',
+            doctext      => 'No root',
+            parent_node  => 1,
+            root_node    => 1,
+        }
+    )
+        ->json_like('/error' => qr/parent_node.+ is not present/)
+        ->status_is(HTTP::Status::HTTP_UNPROCESSABLE_ENTITY);
+}
+
+sub a_note_cannot_be_created_if_its_non_root_parent_is_not_in_note_table : Test(6) ($self) {
+    my $override = $self->make_transactions_noop;
+    my $t = $self->mojo;
+
+    my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}
+      or return('Expected MONKWORLD_AUTH_TOKEN in %ENV');
+
+    # First create a valid parent node
+    my $parent = $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            node_type_id => NODE_TYPE_PERLQUESTION,
+            author_id    => $self->anonymous_user_id,
+            title        => 'Parent Node',
+            doctext      => 'This is a parent node',
+        }
+    )->status_is(HTTP_CREATED)
+     ->tx->res->json;
+
+    $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            node_type_id => NODE_TYPE_NOTE,
+            author_id    => $self->anonymous_user_id,
+            title        => 'Test Note with no root',
+            doctext      => 'No root',
+            parent_node  => $parent->{id},
+            root_node    => $parent->{id} + 2,
+        }
+    )
+    ->json_like('/error' => qr/Non root parent.+ not present/)
+    ->status_is(HTTP::Status::HTTP_UNPROCESSABLE_ENTITY);
+}
