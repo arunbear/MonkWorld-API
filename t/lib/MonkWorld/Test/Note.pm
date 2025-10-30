@@ -113,7 +113,7 @@ sub a_note_cannot_be_created_if_parent_node_does_not_exist : Test(3) ($self) {
         ->status_is(HTTP::Status::HTTP_UNPROCESSABLE_ENTITY);
 }
 
-sub a_note_cannot_be_created_if_its_non_root_parent_is_not_in_note_table : Test(6) ($self) {
+sub a_note_cannot_be_created_if_its_non_root_parent_is_not_in_note_table : Test(5) ($self) {
     my $override = $self->make_transactions_noop;
     my $t = $self->mojo;
 
@@ -145,6 +145,61 @@ sub a_note_cannot_be_created_if_its_non_root_parent_is_not_in_note_table : Test(
             root_node    => $parent->{id} + 2,
         }
     )
+    ->status_is(HTTP::Status::HTTP_UNPROCESSABLE_ENTITY)
     ->json_like('/error' => qr/Non root parent.+ not present/)
-    ->status_is(HTTP::Status::HTTP_UNPROCESSABLE_ENTITY);
+    ;
+}
+
+sub a_note_can_be_created_as_reply_to_reply : Test(10) ($self) {
+    my $override = $self->make_transactions_noop;
+    my $t = $self->mojo;
+
+    my $auth_token = $ENV{MONKWORLD_AUTH_TOKEN}
+      or return('Expected MONKWORLD_AUTH_TOKEN in %ENV');
+
+    # Create root node (a Perl question)
+    my $root = $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            node_type_id => NODE_TYPE_PERLQUESTION,
+            author_id    => $self->anonymous_user_id,
+            title        => 'Root Question',
+            doctext      => 'This is the root question',
+        }
+    )->status_is(HTTP_CREATED)
+     ->tx->res->json;
+
+    # Create first reply to root
+    my $first_reply = $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            node_type_id => NODE_TYPE_NOTE,
+            author_id    => $self->anonymous_user_id,
+            title        => 'First Reply',
+            doctext      => 'This is the first reply',
+            parent_node  => $root->{id},
+            root_node    => $root->{id},
+        }
+    )->status_is(HTTP_CREATED)
+     ->tx->res->json;
+
+    # Create a reply to the first reply
+    $t->post_ok(
+        '/node' => {
+            'Authorization' => "Bearer $auth_token"
+        } => json => {
+            node_type_id => NODE_TYPE_NOTE,
+            author_id    => $self->anonymous_user_id,
+            title        => 'Reply to Reply',
+            doctext      => 'This is a reply to the first reply',
+            parent_node  => $first_reply->{id},
+            root_node    => $root->{id},
+        }
+    )->status_is(HTTP_CREATED)
+     ->json_has('/id')
+     ->json_is('/parent_node' => $first_reply->{id})
+     ->json_is('/root_node' => $root->{id})
+     ->json_is('/path' => sprintf('%d.%d.%d', $root->{id}, $first_reply->{id}, $t->tx->res->json->{id}));
 }
