@@ -1,3 +1,4 @@
+requires 'Devel::Assert', '1.06';
 requires 'Mojo::Pg', '4.28';
 requires 'Path::Iterator::Rule', '1.015';
 requires 'HTTP::Message', '7.01';
