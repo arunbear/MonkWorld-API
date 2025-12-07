@@ -2,21 +2,25 @@ package MonkWorld::API::Model::Threads;
 
 use v5.40;
 use Mojo::Base 'MonkWorld::API::Model::Base', -signatures;
+use Data::Dump 'dump';
+use Time::HiRes qw(gettimeofday tv_interval);
 
 sub get_threads ($self, $interval = '1 day') {
     my $rows = $self->fetch_threads_rows($interval);
 
     my $result = {};
     my @wanted_fields = qw(title created_at author_username author_id);
+    my %section_of;
 
     # group rows into a thread hierarchy
     for my $row (@$rows) {
-        my $section_key = $row->{section_name};
 
         my $is_root_node = $row->{path} eq $row->{id};
         if ($is_root_node) {
+            my $section = $row->{section_name};
+            $section_of{$row->{id}} = $section;
             foreach my $field (@wanted_fields) {
-                $result->{$section_key}{ $row->{id} }{$field} = $row->{$field};
+                $result->{$section}{ $row->{id} }{$field} = $row->{$field};
             }
             next;
         }
@@ -32,12 +36,14 @@ sub get_threads ($self, $interval = '1 day') {
         next unless @ids;
 
         my $root_id = shift @ids;
-        my $cursor = $result->{$section_key}{$root_id};
+        my $section = $section_of{$root_id};
+        my $cursor = $result->{$section}{$root_id};
 
         for my $seg_id (@ids) {
             $cursor->{reply}{$seg_id} //= {};
             $cursor = $cursor->{reply}{$seg_id};
         }
+        # at leaf position
         foreach my $field (@wanted_fields) {
             $cursor->{$field} = $row->{$field};
         }
@@ -49,39 +55,42 @@ sub get_threads ($self, $interval = '1 day') {
 sub fetch_threads_rows ($self, $interval = '1 day') {
     my $db = $self->pg->db;
 
-    # Query notes:
-    # It returns threads that have been active in the most recent N day block
+    # Get threads that have been active in the most recent N day block
     #
-    # The section is derived from the root node's node_type, which is assumed to be the first segment in the path.
+    my $t0 = [gettimeofday];
+    my $last_day = $db->query(q{SELECT MAX(created_at::date) AS max_day FROM node})->hash->{max_day};
 
+    my $recent_ids = $db->query(q{
+      SELECT n.id
+      FROM node n
+      WHERE n.created_at::date BETWEEN $1::date - $2::interval AND $3::date
+    }, $last_day, $interval, $last_day)->arrays;
+
+    my $elapsed = tv_interval ( $t0 );
+    $self->log->debug("Elapsed Q2: $elapsed");
+    $self->log->trace("Recent nodes: " . dump($recent_ids));
+    my $id_array = sprintf('{%s}', $recent_ids->flatten->join(',')); # Pg array avoids (?, ?, ...) fiddliness
+
+    # get details of these nodes and their ancestors
     my $rows = $db->query(q{
-          WITH bounds AS (
-            SELECT MAX(created_at::date) AS max_day
-            FROM node
-          ),
-          recent AS (
-            SELECT n.id, n.path
-            FROM node n, bounds
-            WHERE n.created_at::date
-              BETWEEN bounds.max_day - $1::interval
-                  AND bounds.max_day
-          )
-          SELECT
-            n.id,
-            n.title,
-            n.path,
-            n.created_at,
+          SELECT DISTINCT
+            n1.id,
+            n1.title,
+            n1.path,
+            n1.created_at,
             m.username AS author_username,
             m.id AS author_id,
             s.name AS section_name
-          FROM node n
-          JOIN monk m ON m.id = n.author_id
-          JOIN node r ON r.id = (subpath(n.path, 0, 1))::text::bigint
-          JOIN node_type s ON s.id = r.node_type_id
-          JOIN recent rc ON n.path @> rc.path
-          ORDER BY n.id
-        }, $interval
+          FROM node n1
+          JOIN monk m ON m.id = n1.author_id
+          JOIN node_type s ON s.id = n1.node_type_id
+          JOIN node n2 ON n1.path @> n2.path
+            WHERE n2.id = ANY($1)
+          ORDER BY n1.id
+        }, $id_array
     )->hashes->to_array;
+    $self->log->debug("Elapsed Q3: ". tv_interval($t0));
+    $self->log->trace("Threads rows: " . dump($rows));
 
     return $rows;
 }
