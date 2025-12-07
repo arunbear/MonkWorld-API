@@ -35,7 +35,7 @@ sub teardown : Tests(teardown) ($self) {
     $self->pg->db->query('TRUNCATE note, node');
 }
 
-sub trees_of_nodes_can_be_retrieved_grouped_by_section : Test(no_plan) ($self) {
+sub trees_of_nodes_can_be_retrieved_grouped_by_section : Test(18) ($self) {
     my $t = $self->mojo;
 
     $self->_create_thread(
@@ -117,7 +117,7 @@ sub trees_of_nodes_can_be_retrieved_grouped_by_section : Test(no_plan) ($self) {
     cmp_deeply $result, $expected_json;
 }
 
-sub recent_replies_can_be_retrieved_along_with_their_ancestors : Test(no_plan) ($self) {
+sub recent_replies_can_be_retrieved_along_with_their_ancestors : Test(11) ($self) {
     my $t = $self->mojo;
 
     my $time = localtime;
@@ -174,7 +174,7 @@ sub recent_replies_can_be_retrieved_along_with_their_ancestors : Test(no_plan) (
     cmp_deeply $result, $expected;
 }
 
-sub n_days_of_threads_can_be_requested_via_a_request_param : Test(no_plan) ($self) {
+sub n_days_of_threads_can_be_requested_via_a_request_param : Test(18) ($self) {
     my $t = $self->mojo;
 
     my $time = localtime;
