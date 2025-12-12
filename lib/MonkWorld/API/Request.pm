@@ -1,5 +1,7 @@
 package MonkWorld::API::Request;
 
+our $VERSION = 0.001_003;
+
 =head1 NAME
 
 MonkWorld::API::Request - A helper class for building API requests
