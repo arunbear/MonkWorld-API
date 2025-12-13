@@ -12,7 +12,7 @@ sub get_thread ($self, $node_id) {
     return {} unless @$rows;
 
     my $result = {};
-    my @wanted_fields = qw(title created_at author_username author_id);
+    my @wanted_fields = qw(title doctext created_at author_username author_id);
 
     for my $row (@$rows) {
         my $is_top = $row->{id} == $node_id;
@@ -143,6 +143,7 @@ sub _fetch_thread_rows ($self, $node_id) {
           SELECT
             n.id,
             n.title,
+            n.doctext,
             n.path,
             n.created_at,
             m.username AS author_username,

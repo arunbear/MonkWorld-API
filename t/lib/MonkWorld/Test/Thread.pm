@@ -55,6 +55,7 @@ sub a_thread_can_be_retrieved_by_id : Test(11) ($self) {
     my $expected_json = {
         "$self->{node_store}{Thread_1}{id}" => {
             title => 'Thread_1',
+            doctext => $self->{node_store}{Thread_1}{doctext},
             created_at => re($expected_time),
             author_id  => $self->anonymous_user_id,
             author_username => 'Anonymous Monk',
@@ -62,12 +63,14 @@ sub a_thread_can_be_retrieved_by_id : Test(11) ($self) {
             reply => {
                 "$self->{node_store}{'reply.Thread_1'}{id}" => {
                     title => 'reply.Thread_1',
+                    doctext => $self->{node_store}{'reply.Thread_1'}{doctext},
                     created_at => re($expected_time),
                     author_id  => $self->anonymous_user_id,
                     author_username => 'Anonymous Monk',
                     reply => {
                         "$self->{node_store}{'reply.reply.Thread_1'}{id}" => {
                             title => 'reply.reply.Thread_1',
+                            doctext => $self->{node_store}{'reply.reply.Thread_1'}{doctext},
                             created_at => re($expected_time),
                             author_id  => $self->anonymous_user_id,
                             author_username => 'Anonymous Monk',
@@ -107,6 +110,7 @@ sub a_subthread_can_be_retrieved_by_id : Test(11) ($self) {
     my $expected_json = {
         "$self->{node_store}{'reply.Thread_1'}{id}" => {
             title           => 'reply.Thread_1',
+            doctext         => $self->{node_store}{'reply.Thread_1'}{doctext},
             created_at      => re($expected_time),
             author_id       => $self->anonymous_user_id,
             author_username => 'Anonymous Monk',
@@ -118,6 +122,7 @@ sub a_subthread_can_be_retrieved_by_id : Test(11) ($self) {
             reply => {
                 "$self->{node_store}{'reply.reply.Thread_1'}{id}" => {
                     title => 'reply.reply.Thread_1',
+                    doctext => $self->{node_store}{'reply.reply.Thread_1'}{doctext},
                     created_at => re($expected_time),
                     author_id  => $self->anonymous_user_id,
                     author_username => 'Anonymous Monk',
@@ -154,6 +159,7 @@ sub a_subthread_of_a_subthread_can_be_retrieved_by_id : Test(11) ($self) {
     my $expected_json = {
         $thread_id => {
             title => 'reply.reply.Thread_1',
+            doctext => $self->{node_store}{'reply.reply.Thread_1'}{doctext},
             created_at      => re($expected_time),
             author_id       => $self->anonymous_user_id,
             author_username => 'Anonymous Monk',
