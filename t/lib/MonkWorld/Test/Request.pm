@@ -273,3 +273,62 @@ sub updating_form_entries_updates_form_hash : Test(2) ($self) {
     $req->update_form_entries(days => 7, nights => 'no');
     eq_or_diff $req->form, { days => 7, nights => 'no' }, 'form entries are updated';
 }
+
+sub uri_segments_can_be_added_without_server : Test(3) ($self) {
+    my %req_args = (
+        link_meta => {
+            method => 'GET',
+            href   => '/resource',
+            headers => {},
+        },
+        with_auth_token => false,
+    );
+
+    my $req = MonkWorld::API::Request->new(%req_args);
+    is $req->href => '/resource', 'initial href is correct';
+
+    $req->add_uri_segment('123');
+    is $req->href => '/resource/123', 'segment added with slash';
+
+    $req->add_uri_segment('details');
+    is $req->href => '/resource/123/details', 'second segment added correctly';
+}
+
+sub uri_segments_can_be_added_when_server_is_set : Test(3) ($self) {
+    my $server = 'https://example.com';
+    my %req_args = (
+        link_meta => {
+            method => 'GET',
+            href   => '/resource',
+            headers => {},
+        },
+        with_auth_token => false,
+        server => $server,
+    );
+
+    my $req = MonkWorld::API::Request->new(%req_args);
+    is $req->href => "$server/resource", 'initial href includes server';
+
+    $req->add_uri_segment('123');
+    is $req->href => "$server/resource/123", 'segment added with server preserved';
+
+    $req->add_uri_segment('details');
+    is $req->href => "$server/resource/123/details", 'multiple segments work with server';
+}
+
+sub uri_segments_handle_trailing_slashes_correctly : Test(2) ($self) {
+    my %req_args = (
+        link_meta => {
+            method => 'GET',
+            href   => '/resource/',
+            headers => {},
+        },
+        with_auth_token => false,
+    );
+
+    my $req = MonkWorld::API::Request->new(%req_args);
+    is $req->href => '/resource/', 'initial href has trailing slash';
+
+    $req->add_uri_segment('123');
+    is $req->href => '/resource/123', 'segment added without double slash';
+}

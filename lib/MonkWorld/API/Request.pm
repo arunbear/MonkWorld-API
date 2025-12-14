@@ -147,7 +147,7 @@ sub update_form_entries ($self, %updates) {
 
 sub add_uri_segment ($self, $segment) {
     my $separator = $self->href =~ m{/$} ? '' : '/';
-    $self->_href($self->href . $separator . $segment);
+    $self->_href($self->_href . $separator . $segment);
     return $self;
 }
 
