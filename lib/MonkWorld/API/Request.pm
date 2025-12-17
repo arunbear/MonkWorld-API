@@ -1,6 +1,6 @@
 package MonkWorld::API::Request;
 
-our $VERSION = 0.001_003;
+our $VERSION = 0.001_004;
 
 =head1 NAME
 
