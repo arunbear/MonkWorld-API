@@ -11,7 +11,7 @@ jobs:
     name: Run Perl Tests
     runs-on: ubuntu-latest
     container:
-      image: arunbear/monkworld-api-deps:0.001001
+      image: arunbear/monkworld-api-deps:0.001004
       env:
         MONKWORLD_PG_URL: postgresql://test:test@postgres:5432/test
 

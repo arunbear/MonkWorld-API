@@ -1,5 +1,5 @@
 # Use the pre-built image with all dependencies
-FROM arunbear/monkworld-api-deps:0.001001
+FROM arunbear/monkworld-api-deps:0.001004
 
 WORKDIR /app
 
