@@ -41,13 +41,13 @@ sub search ($self, $query, %params) {
     *   JOIN node r ON r.id = (subpath(n.path, 0, 1))::text::bigint
     *   JOIN node_type s ON s.id = r.node_type_id
     *   WHERE
-    *     to_tsvector('english', n.title || ' ' || n.doctext)
+    *     n.search_vector
     *     @@ websearch_to_tsquery('english', ?query?)
     &   AND ARRAY[s.id] <@ ?@sections_in?
     &   AND NOT ARRAY[s.id] <@ ?@sections_not_in?
     *   ORDER BY
     *     ts_rank(
-    *       to_tsvector('english', n.title || ' ' || n.doctext),
+    *       n.search_vector,
     *       websearch_to_tsquery('english', ?query?)
     *   ) DESC
     *   LIMIT ?limit?

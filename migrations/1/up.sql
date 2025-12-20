@@ -23,7 +23,8 @@ CREATE TABLE node (
     reputation   INTEGER      NOT NULL DEFAULT 0,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    path         public.ltree  NOT NULL
+    path         public.ltree  NOT NULL,
+    search_vector TSVECTOR GENERATED ALWAYS AS (to_tsvector('english', title || ' ' || doctext)) STORED
 );
 
 -- Table for storing reply hierarchy information
@@ -43,10 +44,8 @@ CREATE INDEX idx_node_path ON node USING GIST (path);
 CREATE INDEX idx_note_root ON note(root_node);
 CREATE INDEX idx_note_parent ON note(parent_node);
 
--- Index for full-text search
-CREATE INDEX idx_node_search ON node USING GIN (
-    to_tsvector('english', title || ' ' || doctext)
-);
+-- Index for full-text search using generated column
+CREATE INDEX idx_node_search ON node USING GIN (search_vector);
 
 -- Function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_modified_column()
