@@ -1,5 +1,5 @@
 package MonkWorld::API;
-our $VERSION = 0.001_004;
+our $VERSION = 0.001_005;
 use v5.40;
 use Mojo::Base 'Mojolicious';
 use HTTP::Status 'HTTP_UNAUTHORIZED';
